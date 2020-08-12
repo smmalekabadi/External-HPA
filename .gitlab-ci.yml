@@ -1,0 +1,15 @@
+job-docker:
+  only:
+    - Docker
+  script:
+    - mvn package -Dmaven.test.skip=true
+    - cd target
+    - tag=`ls metrics-server*.jar | cut -d "-" -f 3 | sed 's/.\{4\}$//'`
+    - gittag=`git rev-parse --short HEAD`
+    - cd ..
+    - docker build -t metrics-server:$tag-$gittag -t metrics-server:latest .
+    - docker tag metrics-server:$tag-$gittag hub.neshan.org/metrics-server:$tag-$gittag
+    - docker push hub.neshan.org/metrics-server:$tag-$gittag
+    - docker tag metrics-server:latest hub.neshan.org/metrics-server:latest
+    - docker push hub.neshan.org/metrics-server:latest
+#    - ssh 184 "kubectl set image deployment/metrics-server metrics-server=hub.neshan.org/metrics-server:$tag-$gittag --record"
